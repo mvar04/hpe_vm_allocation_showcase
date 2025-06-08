@@ -70,7 +70,7 @@ def best_fit_allocate(servers: list[Server], new_vm: VM):
     # Find the server with the least remaining space that can fit the VM
     for server in servers:
         if server.can_allocate(new_vm, LIMIT_RATIO):
-            remaining = server.free_space() - new_vm.size()
+            remaining = server.free_space() - new_vm.memory
             if remaining < min_remaining:
                 min_remaining = remaining
                 best_server = server
@@ -123,8 +123,8 @@ def weight_balanced_allocate(servers: list[Server], new_vm: VM):
         if server.can_allocate(new_vm, LIMIT_RATIO):
             # Score balances between filling servers efficiently and load balancing
             # Higher utilization but not too high is preferred
-            current_utilization = server.used_memory() / server.capacity
-            new_utilization = (server.used_memory() + new_vm.size()) / server.capacity
+            current_utilization = server.used_memory() / server.memory
+            new_utilization = (server.used_memory() + new_vm.memory) / server.memory
             
             # Prefer servers that won't be too empty or too full after allocation
             # The closer to 75% utilization, the better the score
@@ -165,7 +165,7 @@ def best_fit_epsilon_greedy_allocate(servers: list[Server], new_vm: VM, epsilon:
     min_remaining = float('inf')
     
     for server in valid_servers:
-        remaining = server.free_space() - new_vm.size()
+        remaining = server.free_space() - new_vm.memory
         if remaining < min_remaining:
             min_remaining = remaining
             best_server = server
@@ -181,7 +181,7 @@ from collections import deque
 def delayed_bin_packing_allocate(servers: list, new_vm, wait_k=3):
     """
     Delayed bin packing with 2-sum matching and forced first-fit flush:
-    1. If new_vm.size() == 0: force allocate all waiting VMs using first-fit
+    1. If new_vm.memory == 0: force allocate all waiting VMs using first-fit
     2. Else:
         a. Try exact match
         b. Try 2-sum match
@@ -195,7 +195,7 @@ def delayed_bin_packing_allocate(servers: list, new_vm, wait_k=3):
     waiting_queue = delayed_bin_packing_allocate.global_waiting_queue
 
     # Special case: force allocate all waiting VMs using first-fit
-    if new_vm.size() == 0:
+    if new_vm.memory == 0:
         updated_queue = deque()
         for vm, wait_count in waiting_queue:
             allocated = first_fit_allocate(servers, vm)
@@ -206,13 +206,13 @@ def delayed_bin_packing_allocate(servers: list, new_vm, wait_k=3):
 
     # Step 1: Try exact match with any server
     for server in servers:
-        if server.free_space() == new_vm.size():
+        if server.free_space() == new_vm.memory:
             if server.allocate_vm(new_vm, LIMIT_RATIO):
                 return True
 
     # Step 2: Try 2-sum match with waiting VMs
     for idx, (waiting_vm, _) in enumerate(waiting_queue):
-        if new_vm.size() + waiting_vm.size() == servers[0].capacity:  # assuming uniform capacity
+        if new_vm.memory + waiting_vm.memory == servers[0].memory:  # assuming uniform capacity
             for server in servers:
                 if server.can_allocate(new_vm, LIMIT_RATIO) and server.can_allocate(waiting_vm, LIMIT_RATIO):
                     server.allocate_vm(new_vm, LIMIT_RATIO)

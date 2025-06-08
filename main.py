@@ -19,7 +19,7 @@ print(servers)
 
 from server import Server
 from vm import VM
-from new_allocator import (
+from allocator import (
     greedy_allocate, 
     first_fit_allocate, 
     best_fit_allocate, 
