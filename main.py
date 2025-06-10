@@ -31,9 +31,16 @@ from allocator import (
 from config import DEFAULT_SERVER_CAPACITY, POOL
 
 def print_servers(servers):
-    print("\nServer States:")
+    print("\n=== Server States ===")
     for i, server in enumerate(servers):
-        print(f"S{i+1}: {server}")
+        print(f"SERVER{i + 1}:")
+        print(f"    Memory: {server.used_memory()}MB / {server.memory}MB ({server.used_memory() * 100 / server.memory}% used)")
+        print(f"    CPUs: {server.used_cores()} / {server.cores} ({server.used_cores() * 100 / server.cores}% used)")
+        print(f"    Active VMs: {len(server.allocated)}")
+        print(f"    System CPU: {server.used_cores() * 100 / server.cores}%")
+        print(f"    System Memory: {server.used_memory()}MB / {server.memory}MB ({server.used_memory() * 100 / server.memory}%)")
+        print(f"    Disk Usage: 0%")
+        print(f"    Load Average: 0.00")
 
 def main():
     # Unpacking (memory, cores) from config

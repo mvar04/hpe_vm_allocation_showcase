@@ -17,7 +17,10 @@ class Server:
         
     def free_cores(self):
         return self.cores - sum(vm.cores for vm in self.allocated)
-
+        
+    def used_cores(self):
+        return sum(vm.cores for vm in self.allocated)
+        
     def can_allocate(self, vm: VM, limit_ratio: float = 1.0):
         return (vm.memory <= self.memory * limit_ratio - self.used_memory()) and vm.cores <= self.free_cores()
 
